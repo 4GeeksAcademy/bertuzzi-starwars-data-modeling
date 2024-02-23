@@ -1,32 +1,82 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
 
 Base = declarative_base()
 
-class Person(Base):
-    __tablename__ = 'person'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
+class User(Base):
+    __tablename__ = 'users'
+    user_id = Column(Integer, primary_key=True)
+    email = Column(String(200), nullable=False, unique=True)
+    password = Column(String(50), nullable=False)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
 
-class Address(Base):
-    __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
-    id = Column(Integer, primary_key=True)
-    street_name = Column(String(250))
-    street_number = Column(String(250))
-    post_code = Column(String(250), nullable=False)
-    person_id = Column(Integer, ForeignKey('person.id'))
-    person = relationship(Person)
+class Planet(Base):
+    __tablename__ = 'planets'
+    planet_id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    population = Column(Integer, nullable=False)
 
-    def to_dict(self):
-        return {}
+class Character(Base):
+    __tablename__ = 'characters'
+    character_id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    homeworld= Column(String(50), ForeignKey('planets.name'))
+    planet = relationship(Planet)
+
+class Director(Base):
+    __tablename__ = 'directors'
+    id = Column(Integer, primary_key=True)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+
+class Film(Base):
+    __tablename__ = 'films'
+    film_id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    director_name = Column(String(50),ForeignKey('directors.first_name'))
+    director = relationship(Director)
+
+class CharacterFilm(Base):
+    __tablename__ = 'character_films'
+    id = Column(Integer, primary_key=True)
+    character_id = Column(Integer,ForeignKey('characters.character_id'))
+    film_id = Column(Integer,ForeignKey('films.film_id'))
+    minutes = Column(Integer,nullable=True)
+    characters = relationship(Character,foreign_keys=[character_id])
+    films = relationship(Film,foreign_keys=[film_id])
+
+class FavoriteCharacters(Base):
+    __tablename__ = 'favorite_characters'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer,ForeignKey('users.user_id'))
+    character_id = Column(Integer,ForeignKey('characters.character_id'))
+    characters = relationship(Character,foreign_keys=[character_id])
+    users = relationship(User,foreign_keys=[user_id])
+    time_added = Column(DateTime,nullable=False)
+
+class FavoriteFilms(Base):
+    __tablename__ = 'favorite_films'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer,ForeignKey('users.user_id'))
+    film_id = Column(Integer,ForeignKey('films.film_id'))
+    users = relationship(User,foreign_keys=[user_id])
+    films = relationship(Film,foreign_keys=[film_id])
+    time_added = Column(DateTime,nullable=False)
+
+class FavoritePlanets(Base):
+    __tablename__ = 'favorite_planets'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer,ForeignKey('users.user_id'))
+    planet_id = Column(Integer,ForeignKey('planets.planet_id'))
+    users = relationship(User,foreign_keys=[user_id])
+    planets = relationship(Planet,foreign_keys=[planet_id])
+    time_added = Column(DateTime,nullable=False)
+
 
 ## Draw from SQLAlchemy base
 render_er(Base, 'diagram.png')
